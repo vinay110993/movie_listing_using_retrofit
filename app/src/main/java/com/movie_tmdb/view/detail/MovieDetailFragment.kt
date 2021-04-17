@@ -54,7 +54,8 @@ class MovieDetailFragment: BaseFragment(){
     }
 
     /**
-     * initialize view model, @see com.innoventes.di.ViewModelModule
+     * initialize view model,
+     * @see com.movie_tmdb.di.ViewModelModule
      * */
     private fun initializeViewModel(){
         viewModel = factory.create(MovieDetailViewModel::class.java)

@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Innoventes.iml" filepath="$PROJECT_DIR$/.idea/modules/Innoventes.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Innoventes.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Innoventes.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Movie_db.iml" filepath="$PROJECT_DIR$/.idea/modules/Movie_db.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Movie_db.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Movie_db.app.iml" />
     </modules>
   </component>
 </project>

@@ -1,2 +1,2 @@
 include ':app'
-rootProject.name = "Innoventes"
+rootProject.name = "Movie db"
