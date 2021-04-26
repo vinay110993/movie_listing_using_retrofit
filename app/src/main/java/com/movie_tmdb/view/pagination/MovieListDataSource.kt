@@ -9,15 +9,15 @@ import com.movie_tmdb.model.MovieListingModel
 import com.movie_tmdb.util.AppConstants
 import com.movie_tmdb.util.ErrorViewTypes
 import com.movie_tmdb.util.NetworkState
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.*
+import retrofit2.Response
 
 class MovieListDataSource(private val repository: NoteRepository,
-private val networkState: MutableLiveData<NetworkState>)
+                          private val networkState: MutableLiveData<NetworkState>,
+                          private val scope: CoroutineScope)
     : PageKeyedDataSource<Int, MovieDetailModel>() {
 
-    private fun getMethod(page: String): Observable<MovieListingModel> {
+    private suspend fun getMethod(page: String): Response<MovieListingModel> {
         return if(AppConstants.SEARCH_KEY.isNullOrEmpty()) repository.getEndPoints().getList(page = page)
         else repository.getEndPoints().getSearchList(page = page, query = AppConstants.SEARCH_KEY)
     }
@@ -27,31 +27,41 @@ private val networkState: MutableLiveData<NetworkState>)
         params: LoadInitialParams<Int>,
         callback: LoadInitialCallback<Int, MovieDetailModel>
     ) {
-        networkState.postValue(NetworkState.Loading(status = true))
-        getMethod("1").subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
-                callback.onResult(it.results ?: emptyList(), null, 2)
+        scope.launch {
+
+            networkState.postValue(NetworkState.Loading(true))
+            val response = withContext(Dispatchers.IO){
+                getMethod("1")
+            }
+            if(response.body() != null){
+                val list = response.body()?.results ?: emptyList()
+                callback.onResult(list, null, if(list.isNotEmpty()) 2 else null)
                 networkState.postValue(NetworkState.Success(true))
-            }, {
-                networkState.postValue(NetworkState.Failure(ErrorViewTypes.DIALOG, it))
-            }, {
-                networkState.postValue(NetworkState.Loading(status = false))
-            })
+            } else {
+                networkState.postValue(NetworkState.Failure(viewType = ErrorViewTypes.SNACK_BAR,
+                    exception = Throwable(response.errorBody().toString())))
+            }
+            networkState.postValue(NetworkState.Loading(false))
+        }
+
     }
 
     @SuppressLint("CheckResult")
     override fun loadAfter(params: LoadParams<Int>, callback: LoadCallback<Int, MovieDetailModel>) {
-        getMethod(params.key.toString()).subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
-                callback.onResult(it.results ?: emptyList(), params.key+1)
-            }, {
-                networkState.postValue(NetworkState.Failure(ErrorViewTypes.SNACK_BAR, it))
-                }
-            )
+        scope.launch {
+
+            val response = withContext(Dispatchers.IO){
+                getMethod(params.key.toString())
+            }
+
+            if(response.body() != null){
+                val list = response.body()?.results ?: emptyList()
+                callback.onResult(list, params.key+1)
+                networkState.postValue(NetworkState.Success(true))
+            } else {
+                networkState.postValue(NetworkState.Failure(viewType = ErrorViewTypes.DIALOG, exception = Throwable(response.errorBody().toString())))
+            }
+        }
     }
 
     override fun loadBefore(
@@ -59,6 +69,5 @@ private val networkState: MutableLiveData<NetworkState>)
         callback: LoadCallback<Int, MovieDetailModel>
     ) {
     }
-
 
 }

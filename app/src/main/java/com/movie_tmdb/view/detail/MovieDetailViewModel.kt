@@ -4,87 +4,48 @@ import android.annotation.SuppressLint
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.movie_tmdb.di.database.MovieEntity
 import com.movie_tmdb.di.database.NoteRepository
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class MovieDetailViewModel @Inject constructor(private val repo: NoteRepository): ViewModel(){
-
-    private var disposable: CompositeDisposable ?= null
-    init {
-        disposable = CompositeDisposable()
-    }
-
-    /**
-     * calling api to get movie details with specific movieId,
-     * but now using parcelable in bundle to pass from previous screen
-     * */
-
-//    @SuppressLint("CheckResult")
-//    fun getMovieDetail(movieId: String): LiveData<MovieDetailModel>{
-//        val mutableLiveData = MutableLiveData<MovieDetailModel>()
-//
-//        disposable?.add(
-//            repo.getEndPoints().getDetails(movieId)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe({
-//                    mutableLiveData.postValue(it)
-//                }, {
-//                    it.printStackTrace()
-//                })
-//        )
-//        return mutableLiveData
-//    }
 
     /**
      * calling repository method to insert ot remove,
      * @param movieEntity: entity need to update
      * @see com.movie_tmdb.di.database.NoteRepository.insertMovieId
      * */
-    @SuppressLint("CheckResult")
-    fun insertsMovieIdExistsInDB(movieEntity: MovieEntity): LiveData<Boolean>{
-        val mutableLiveData = MutableLiveData<Boolean>()
+    fun insertsMovieIdExistsInDB(movieEntity: MovieEntity): LiveData<Boolean> {
 
-        disposable?.add(
-            repo.insertMovieId(movieEntity )
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    mutableLiveData.postValue(it)
-                }
-        )
+        val mutableLiveData = MutableLiveData<Boolean>()
+        viewModelScope.launch {
+            val status = withContext(Dispatchers.IO){
+                repo.insertMovieId(entity = movieEntity)
+            }
+            mutableLiveData.postValue(status)
+        }
         return mutableLiveData
     }
 
     /**
      * calling repository method to check if the id exists in database,
      * @param movieId: id need to check if exists in db
-     * @see com.movie_tmdb.di.database.NoteRepository.userCount
+     * @see com.movie_tmdb.di.database.NoteRepository.isMovieExistInDb
      * */
     @SuppressLint("CheckResult")
-    fun isMovieIdExistsInDB(movieId: String): LiveData<Boolean>{
+    fun isMovieIdExistsInDB(movieId: String): LiveData<Boolean> {
         val mutableLiveData = MutableLiveData<Boolean>()
-        disposable?.add(
-            repo.userCount(movieId)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    mutableLiveData.postValue(it > 0)
-                }
-        )
+        viewModelScope.launch {
+            val response = withContext(Dispatchers.IO){
+                repo.isMovieExistInDb(movieId)
+            }
+            mutableLiveData.postValue(response != null)
+        }
         return mutableLiveData
-    }
-
-    /**
-     * disposing my observables, when view model cleared
-     * */
-    override fun onCleared() {
-        super.onCleared()
-        if(disposable != null && disposable?.isDisposed == false) disposable?.dispose()
     }
 
 }

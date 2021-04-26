@@ -7,8 +7,6 @@ import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import com.movie_tmdb.di.RetrofitApiEndPoints
 import com.movie_tmdb.util.AppConstants
-import io.reactivex.*
-import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class NoteRepository @Inject constructor(private val dao: MovieDao,
@@ -36,18 +34,10 @@ class NoteRepository @Inject constructor(private val dao: MovieDao,
     fun getEndPoints() = endPoints
 
     /**
-     * method to check if a specific id exists in databse or not, by providing count.
-     * @param: movieId
-     * */
-    fun userCount(movieId: String): Observable<Int>{
-        return dao.usersCount(movieId).toObservable()
-    }
-
-    /**
      * method to insert an entity into Database
      * @param: entity: MovieEntity
      * */
-    private fun insertIntoDb(entity: MovieEntity) {
+    private suspend fun insertIntoDb(entity: MovieEntity) {
         return dao.insertNoteIntoDb(entity)
     }
 
@@ -55,7 +45,7 @@ class NoteRepository @Inject constructor(private val dao: MovieDao,
      * method to deleting an entity into Database
      * @param: entity: MovieEntity
      * */
-    private fun deleteFromDb(entity: MovieEntity){
+    private suspend fun deleteFromDb(entity: MovieEntity){
         return dao.deleteEntity(entity)
     }
 
@@ -63,7 +53,7 @@ class NoteRepository @Inject constructor(private val dao: MovieDao,
      * performs action, by checking if entity exists in db or not
      *
      * firstly it checks if movieId. of entity exists in database,
-     * @see userCount
+     * @see isMovieExistInDb
      * if yes: it insert into database, by creating a separate observer after completing the action
      * @see insertIntoDb
      * if no: it delete from database, by creating a separate observer after completing the action
@@ -71,13 +61,17 @@ class NoteRepository @Inject constructor(private val dao: MovieDao,
      * */
 
     @SuppressLint("CheckResult")
-    fun insertMovieId(entity: MovieEntity): Observable<Boolean>{
-        return userCount(entity.movieId)
-            .subscribeOn(Schedulers.io())
-            .flatMap {
-                if(it <= 0) Completable.fromAction { insertIntoDb(entity) }.andThen(Observable.just(true))
-                else Completable.fromAction { deleteFromDb(entity) }.andThen(Observable.just(false))
-            }
+    suspend fun insertMovieId(entity: MovieEntity): Boolean{
+        val movieEntity = isMovieExistInDb(entity.movieId)
+        return if(movieEntity == null){
+            dao.insertNoteIntoDb(entity)
+            true
+        } else {
+            dao.deleteEntity(movieEntity)
+            false
+        }
     }
+
+    fun isMovieExistInDb(movieId: String) = dao.fetchItem(movieId)
 
 }

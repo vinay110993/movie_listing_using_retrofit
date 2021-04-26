@@ -29,12 +29,12 @@ object VIewBindingAdapter{
     * */
     @JvmStatic
     @BindingAdapter( value = ["app:background_color", "app:corner_radius"], requireAll = false)
-    fun setBackground(view: View, backColor: Int = Color.WHITE, cornerRadius: Float= 2f){
+    fun setBackground(view: View, backColor: Int?, cornerRadius: Float?){
         val shape = GradientDrawable()
-        shape.cornerRadius = cornerRadius
-        shape.setColor(backColor)
+        shape.cornerRadius = cornerRadius ?: 2f
+        shape.setColor(backColor ?: Color.WHITE)
 
-        view.background = shape
+        //view.background = shape
     }
 
 }

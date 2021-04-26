@@ -3,6 +3,7 @@ package com.movie_tmdb.view.listing
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import com.movie_tmdb.di.database.NoteRepository
@@ -16,11 +17,10 @@ class MovieListingViewModel @Inject constructor(private val repo: NoteRepository
     var dataList: LiveData<PagedList<MovieDetailModel>>?= null
 
     private val _networkStateLiveData= MutableLiveData<NetworkState>()
-
     fun getNetworkStateLiveData(): LiveData<NetworkState> = _networkStateLiveData
 
     fun getAccessToken() {
-        val dataFactory = MovieListDataFactory(repository = repo, networkState = _networkStateLiveData)
+        val dataFactory = MovieListDataFactory(repository = repo, networkState = _networkStateLiveData, scope = viewModelScope)
         val config = PagedList.Config.Builder()
             .setEnablePlaceholders(true)
             .setPageSize(10)

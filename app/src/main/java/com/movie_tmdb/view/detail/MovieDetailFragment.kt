@@ -15,7 +15,6 @@ import com.movie_tmdb.databinding.MovieDetailLayoutBinding
 import com.movie_tmdb.di.database.MovieEntity
 import com.movie_tmdb.util.AppConstants
 import com.movie_tmdb.util.getDoubleValue
-import com.movie_tmdb.util.getIntValue
 import com.movie_tmdb.util.inflateLayout
 import com.movie_tmdb.view.BaseFragment
 import javax.inject.Inject
@@ -88,7 +87,6 @@ class MovieDetailFragment: BaseFragment(){
             })
         }
     }
-
 
     /**
      * method check if the particular requested movieEntity exists in database already,

@@ -101,3 +101,5 @@ fun Context.showInfoDialog(title: String, message: String){
 fun View.showSnackBar(message: String){
     Snackbar.make(this, message, Snackbar.LENGTH_LONG).show()
 }
+
+fun String?.isNotNullOrEmpty() = this != null && this.isNotEmpty()
